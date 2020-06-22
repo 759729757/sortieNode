@@ -1,7 +1,7 @@
 const moment = require('moment')
 const mongoose = require('../mongoose')
-const Article = mongoose.model('Article')
-const Banner = mongoose.model('Banner')
+const Article = mongoose.model('article')
+const Banner = mongoose.model('banner')
 const marked = require('marked')
 
 /**
@@ -12,7 +12,7 @@ const marked = require('marked')
  * @return {[type]}     [description]
  */
 exports.getBannerList = (req, res) => {
-    
+
     Banner.find({is_show:true})
     .then(result=>{
         res.json({
@@ -40,7 +40,7 @@ exports.getHotList = (req, res) => {
   let { limit, page } = req.query
   page = parseInt(page, 10)
   limit = parseInt(limit, 10)
-  
+
   if (!page) page = 1
   if (!limit) limit = 10
 

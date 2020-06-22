@@ -1,17 +1,50 @@
 const moment = require('moment')
 const mongoose = require('../mongoose')
-
-const Category = mongoose.model('Category')
-const Article = mongoose.model('Article')
-const User = mongoose.model('User')
-const Coupon = mongoose.model('Coupon')
-const Banner = mongoose.model('Banner')
-const general = require('./general')
-const Address = mongoose.model('Address')
-const Cart = mongoose.model('Cart')
 var multiparty = require('multiparty');
 
-const { item, modify, deletes, recover } = general
+
+const Article = mongoose.model('article')
+const User = mongoose.model('User')
+const Banner = mongoose.model('banner')
+
+
+/**
+ *上传图片
+ */
+exports.uploadImage = (req,res)=>{
+    //生成multiparty对象，并配置上传目标路径
+    const uploadPath = '../public/images/';
+    var form = new multiparty.Form({uploadDir: uploadPath});
+
+    //上传完成后处理
+    form.parse(req, function(err, fields, files) {
+        var obj ={};
+
+        var filesTmp = JSON.stringify(files,null,2);
+        if(err){
+            console.log('parse error: ' + err);
+        }
+        else {
+            console.log('parse files: ' + filesTmp);
+            var inputFile = files.inputFile[0];
+            var uploadedPath = inputFile.path;
+            var dstPath = uploadPath + inputFile.originalFilename;
+            //重命名为真实文件名
+            fs.rename(uploadedPath, dstPath, function(err) {
+                if(err){
+                    console.log('rename error: ' + err);
+                    res.writeHead(200, {'content-type': 'text/plain;charset=utf-8'});
+                    res.end("{'status':200, 'message': '上传失败！'}");
+                } else {
+                    console.log('rename ok');
+                    res.writeHead(200, {'content-type': 'text/plain;charset=utf-8'});
+                    res.end("{'status':400, 'message': '上传成功！'}");
+                }
+            });
+        }
+    });
+};
+
 
 /**
  * 上传banner图片
@@ -95,91 +128,55 @@ exports.updateBanner = (req,res) => {
    })
 }
 
-/**
- * 添加分类
- * @method
- * @param  {[type]} req [description]
- * @param  {[type]} res [description]
- * @return {[type]}     [description]
- */
-exports.addClass = (req, res) => {
-    const { cate_name, cate_order } = req.body
-    if (!cate_name || !cate_order) {
-        res.json({
-            code: -200,
-            message: '请填写分类名称和排序'
-        })
-    } else {
-        return Category.createAsync({
-            cate_name,
-            cate_order,
-            creat_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-            update_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-            is_delete: 0,
-            timestamp: moment().format('X')
-        }).then(result => {
-            res.json({
-                code: 200,
-                message: '添加成功',
-                data: result._id
-            })
-        }).catch(err => {
-            res.json({
-                code: -200,
-                message: err.toString()
-            })
-        })
-    }
-}
 
 /**
- * 添加商品
+ * 添加文章
  * @method
  * @param  {[type]} req [description]
  * @param  {[type]} res [description]
  * @return {[type]}     [description]
  */
 exports.addItem = (req, res) => {
-    const {
-      category,
-      content,
-      title,
-      img,
-      spec,
-      price,
-      num,
-      is_hot
-    } = req.body
-
-    // const html = marked(content)
-    const arr_category = category.split('|')
-    const data = {
-        title,
-        img,
-        spec,
-        price,
-        num,
-        category:arr_category[0],
-        category_name:arr_category[1],
-        content,
-        html:content,
-        visit: 0,
-        like: 0,
-        comment_count: 0,
-        creat_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-        update_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-        is_delete: 0,
-        is_hot,
-        timestamp: moment().format('X')
-    }
-    Article.createAsync(data)
+    // const {
+    //   category,
+    //   content,
+    //   title,
+    //   img,
+    //   spec,
+    //   price,
+    //   num,
+    //   is_hot
+    // } = req.body
+    //
+    // // const html = marked(content)
+    // const arr_category = category.split('|')
+    // const data = {
+    //     title,
+    //     img,
+    //     spec,
+    //     price,
+    //     num,
+    //     category:arr_category[0],
+    //     category_name:arr_category[1],
+    //     content,
+    //     html:content,
+    //     visit: 0,
+    //     like: 0,
+    //     comment_count: 0,
+    //     creat_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     update_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     is_delete: 0,
+    //     is_hot,
+    //     timestamp: moment().format('X')
+    // }
+    console.log(req.body);
+    console.log(req.files);
+    Article.createAsync({img_url:req.files.image.path})
     .then(result => {
-        return Category.updateAsync({ _id: arr_category[0] }, { $inc: { cate_num: 1 } }).then(() => {
-            return res.json({
-                code: 200,
-                message: '发布成功',
-                data: result
-            })
+        return res.json({
+            code: 200,
+            message: '发布成功',
+            data: result
         })
     })
     .catch(err => {
@@ -190,19 +187,10 @@ exports.addItem = (req, res) => {
     })
 }
 
-/**
- * 删除分类
- * @method
- * @param  {[type]} req [description]
- * @param  {[type]} res [description]
- * @return {[type]}     [description]
- */
-exports.delClass = (req, res) => {
-    deletes(req, res, Category)
-}
+
 
 /**
- * 删除商品
+ * 删除文章
  * @method
  * @param  {[type]} req [description]
  * @param  {[type]} res [description]
@@ -211,13 +199,11 @@ exports.delClass = (req, res) => {
 exports.delItem = (req, res) => {
     const _id = req.query.id
     Article.updateAsync({ _id }, { is_delete: 1 })
-        .then(() => {
-            return Category.updateAsync({ _id }, { $inc: { cate_num: -1 } }).then(result => {
-                res.json({
-                    code: 200,
-                    message: '更新成功',
-                    data: result
-                })
+        .then((result) => {
+            res.json({
+                code: 200,
+                message: '更新成功',
+                data: result
             })
         })
         .catch(err => {
@@ -242,12 +228,6 @@ exports.delUser = (req, res) => {
         let user = result[0]
         User.removeAsync({"openid":user.openid})
         .then((result) => { //删除关联数据
-            Address.removeAsync({"openid":user.openid}).catch(err => {
-                console.log(err.toString())
-            })
-            Cart.removeAsync({"openid":user.openid}).catch(err => {
-                console.log(err.toString())
-            })
             res.json({
                 code: -200,
                 message: '删除成功',
@@ -264,61 +244,3 @@ exports.delUser = (req, res) => {
 
 }
 
-/**
- * 添加优惠券
- * @method
- * @param  {[type]} req [description]
- * @param  {[type]} res [description]
- * @return {[type]}     [description]
- */
-exports.addCoupon = (req,res) => {
-
-    const {money,name,effective,category,category_name,condition } = req.body
-
-    let data = {
-        money,
-        name,
-        effective,
-        category,
-        category_name,
-        condition,
-        state:1
-    }
-    Coupon.createAsync(data)
-    .then(result => {
-        res.json({
-            code: 200,
-            message: '添加成功',
-            data: result
-        })
-    })
-    .catch(err => {
-        res.json({
-            code: -200,
-            message: err.toString()
-        })
-    })
-}
-
-/**
- * 全部优惠券列表
- * @method
- * @param  {[type]} req [description]
- * @param  {[type]} res [description]
- * @return {[type]}     [description]
- */
-exports.couponList = (req,res) => {
-    Coupon.find()
-    .then(result => {
-        res.json({
-            code: 200,
-            data: result
-        })
-    })
-    .catch(err => {
-        res.json({
-            code: -200,
-            message: err.toString()
-        })
-    })
-}

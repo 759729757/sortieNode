@@ -2,7 +2,7 @@ var mongoose = require('../mongoose');
 var Schema = mongoose.Schema;
 var Promise = require('bluebird');
 
-var NewsSchema = new Schema({
+var ArticleSchema = new Schema({
     img_url:String,//图片地址
     title:String,
     date:String,//创建日期
@@ -13,8 +13,8 @@ var NewsSchema = new Schema({
 
 });
 
-var News = mongoose.model('news', NewsSchema);
-Promise.promisifyAll(News);
-Promise.promisifyAll(News.prototype);
+var Article = mongoose.model('article', ArticleSchema);
+Promise.promisifyAll(Article);
+Promise.promisifyAll(Article.prototype);
 
-module.exports = News;
+module.exports = Article;
