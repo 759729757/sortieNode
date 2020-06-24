@@ -1,11 +1,11 @@
-const express = require('express')
-const router = express.Router()
-const multipart = require('connect-multiparty')
+const express = require('express');
+const router = express.Router();
+const multipart = require('connect-multiparty');
 const multipartMiddleware = multipart({uploadDir: './public/images/'});
-const intercept = require('../routes/intercept')
+const intercept = require('../routes/intercept');
 
 // const homeApi = require('../api/home-api.js')
-const adminApi = require('../api/admin-api.js')
+const adminApi = require('../api/admin-api.js');
 // const publicApi = require('../api/public-api.js')
 // const userApi = require('../api/user-api.js')
 // const orderApi = require('../api/order-api.js')

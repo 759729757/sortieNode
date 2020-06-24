@@ -137,41 +137,25 @@ exports.updateBanner = (req,res) => {
  * @return {[type]}     [description]
  */
 exports.addItem = (req, res) => {
-    // const {
-    //   category,
-    //   content,
-    //   title,
-    //   img,
-    //   spec,
-    //   price,
-    //   num,
-    //   is_hot
-    // } = req.body
+    const {
+        img_url,//图片地址
+        title,
+        content,//展示的内容
+        putAway,readNum,likeNum
+    } = req.body ;
     //
-    // // const html = marked(content)
-    // const arr_category = category.split('|')
-    // const data = {
-    //     title,
-    //     img,
-    //     spec,
-    //     price,
-    //     num,
-    //     category:arr_category[0],
-    //     category_name:arr_category[1],
-    //     content,
-    //     html:content,
-    //     visit: 0,
-    //     like: 0,
-    //     comment_count: 0,
-    //     creat_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //     update_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //     is_delete: 0,
-    //     is_hot,
-    //     timestamp: moment().format('X')
-    // }
-    console.log(req.body);
+    var imgUrl = req.files.image.path;
+    console.log(imgUrl);
+    const data = {
+        title,
+        img_url:(req.files.image.path.split('\\')).pop(),
+        putAway:putAway,readNum:readNum,likeNum:likeNum,
+        content,
+        creat_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+        update_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
     console.log(req.files);
-    Article.createAsync({img_url:req.files.image.path})
+    Article.createAsync(data)
     .then(result => {
         return res.json({
             code: 200,

@@ -5,11 +5,12 @@ var Promise = require('bluebird');
 var ArticleSchema = new Schema({
     img_url:String,//图片地址
     title:String,
-    date:String,//创建日期
+    creat_date:String,//创建日期
+    update_date:String,
     content:String,//展示的内容
     readNum:{type:Number,default: 0},
     likeNum:{type:Number,default: 0},
-    putAway:{type:Boolean,default:false},
+    putAway:{type:Boolean,default:true},
 
 });
 
