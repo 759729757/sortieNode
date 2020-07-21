@@ -4,8 +4,12 @@ var Promise = require('bluebird');
 
 var BannerSchema = new Schema({
     img_url:String,//图片地址
+    title:String,
     content:String,//展示的内容
-    putAway:{type:Boolean,default:false},
+
+    creat_date:String,//创建日期
+    update_date:String,
+    putAway:{type:Boolean,default:true},
 
 });
 
