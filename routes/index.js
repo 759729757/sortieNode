@@ -5,6 +5,9 @@ const multipartMiddleware = multipart({uploadDir: './public/images/'});
 const intercept = require('../routes/intercept');
 const bodyParser = require('body-parser');
 
+require("body-parser-xml")(bodyParser);//微信支付解析xml
+const jsonParser = bodyParser.json();
+
 // const homeApi = require('../api/home-api.js')
 const adminApi = require('../api/admin-api.js');
 const publicApi = require('../api/public-api.js')
@@ -53,9 +56,12 @@ router.post('/updateUserInfo',intercept.user, publicApi.updateUserInfo );
 router.post('/updatePhone',intercept.user, publicApi.updatePhone );
 
 
-//购买
+//微信支付相关
 router.get('/wxPurchase',intercept.user,purchase.order ); //发起订单请求
+router.post('/purchaseCallback',purchase.purchaseCallback );//微信支付成功回调
 
+//公共
+router.get('/commit/config', publicApi.wechatConfig );
 
 
 

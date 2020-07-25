@@ -1,10 +1,10 @@
 /**
  * 微信相关接口
  * **/
-import config from '../config/index'
+const config = require('../config');//配置文件
 const https= require('https');
 
-function get_wx_accesstoken(cb){
+var get_wx_accesstoken = function(cb){
     https.get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+config.wechatAppId
         +"&secret="+config.wechatAppSecret+"",
         function(res2) {
@@ -28,10 +28,9 @@ function get_wx_accesstoken(cb){
                     }).on('error', function(e2) {
                     console.log("Got jsapi_ticket fail " + e2.message)
                 });
-
             })
         }).on('error', function(e) {
         console.log("Got access_token fail " + e.message)
     });
-}
+};
 exports.get_wx_accesstoken = get_wx_accesstoken;

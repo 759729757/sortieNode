@@ -8,6 +8,8 @@ const Banner = mongoose.model('banner')
 const Record = mongoose.model('record');
 const Magazine = mongoose.model('magazine')
 
+
+const Base64 = require("js-base64").Base64;
 const config = require('../config');//配置文件
 const https= require('https');
 const jwt = require('jsonwebtoken');  //用来生成token
@@ -28,7 +30,7 @@ exports.loginByCode = async (req,res)=>{
             let appid = config.appid,
             secret = config.appsecret;
             var x='';//wx response;
-            if(state === 'fuwu'){
+            if(state === 'web'){
                 appid = config.wechatAppId;
                 secret = config.wechatAppSecret;
                 https.get("https://api.weixin.qq.com/sns/oauth2/access_token?appid="
@@ -133,15 +135,22 @@ exports.loginByCode = async (req,res)=>{
 
     }
 };
+
 exports.wechatConfig = (req,res)=>{
     var url = req.query.url;
-    if(url){
-        console.log('wx_sign:'+wxSign(jsapi_ticket, url));
-        res.jsonp(wxSign(jsapi_ticket, url));
-    }else{
-        res.jsonp('false');
+    try {
+        if(url){
+            console.log('wx_sign:'+wxSign(global.jsapi_ticket, url));
+            res.jsonp(wxSign(global.jsapi_ticket, url));
+        }else{
+            res.jsonp('false');
+        }
+    }catch (e) {
+        console.log('config出错：',e);
     }
+
 };
+
 exports.updatePhone = (req,res)=>{
     var body = req.body;
     // console.log('updateUserInfo',req.query.userInfo.openid);

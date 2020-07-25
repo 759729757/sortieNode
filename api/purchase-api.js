@@ -9,6 +9,7 @@ const config = require('../config');//配置文件
 require('../models/tradeRecord/record');
 
 var Record = mongoose.model('record');
+var Magazine = mongoose.model('magazine');
 
 //产生随机数
 function randomStr(length) {
@@ -53,16 +54,22 @@ exports.order = async (req,res)=>{
     var reqUrl = 'https://api.mch.weixin.qq.com/pay/unifiedorder'; //向微信提交订单申请
 //签名
 //     total_fee = 1;//设置价格为1分，测试用
+//     
+    let appid =config.appid;
+    if(req.query.buyType==='web'){
+        // 网页端购买
+        appid= config.wechatAppId
+    }
 
     var signoption = {
-        appid: config.appid,//小程序appid
-        body: req.query.tradeBody||'Planet 电子刊',//商品描述
+        appid: appid,//小程序appid
+        body: req.query.tradeBody||'Sortie 电子刊',//商品描述
         mch_id: config.mch_id,//商户号
         nonce_str: nonce_str,//随机字符串
-        notify_url: 'https://wechat.planetofficial.cn/client/purchaseCallback', //回调地址
+        notify_url: 'https://wechat.studiosortie.com/purchaseCallback', //回调地址
         openid: openid,//交易类型是JSAPI的话，此参数必传   可从过code获取openid
         out_trade_no:orderno,//商品订单号
-        spbill_create_ip: '47.115.142.28',//因为微信支付需要有回调url，所以没法确定你的公网ip就没法发送订单支付通知给你，所以提供一个解析的正常ip就好
+        spbill_create_ip: '119.23.218.4',//因为微信支付需要有回调url，所以没法确定你的公网ip就没法发送订单支付通知给你，所以提供一个解析的正常ip就好
         total_fee: total_fee,//商品价格
         trade_type: 'JSAPI'//交易类型，JSAPI为小程序交易类型
     };
@@ -101,7 +108,7 @@ exports.order = async (req,res)=>{
                     console.log('统一下单接口返回的解析数据：',reData);
                     let timeStamp = new Date().getTime();
 
-                    var _signtext = "appId="+config.appid+"&nonceStr=" + reData.nonce_str[0] +
+                    var _signtext = "appId="+appid+"&nonceStr=" + reData.nonce_str[0] +
                         "&package=prepay_id=" + reData.prepay_id[0] +
                         "&signType=MD5&timeStamp=" + timeStamp +
                         "&key="+config.mch_key;//商户key一定要补，顺序不要随便调整**
@@ -135,7 +142,13 @@ exports.order = async (req,res)=>{
                             tradeTime:new Date().valueOf(),
                         },
                         function (err, data) {
-                            if(err)next(err);
+                            if(err){
+                                console.log('下单失败：',err);
+                                res.jsonp({
+                                    err:'err'
+                                })
+                                return ;
+                            };
                             res.json({ error_code: 0, result: responseData,out_trade_no:signoption.out_trade_no });
                         }
                     );
@@ -145,9 +158,51 @@ exports.order = async (req,res)=>{
                 // res.json({ error_code: 0, result: responseData,out_trade_no:signoption.out_trade_no });
             } catch (e) {
                 console.log(e);
+                console.log('下单失败：',e);
+                    res.jsonp({
+                        err:'err'
+                    })
+                    return ;
             }
         }
     });
 }
 
+//微信回调地址
+exports.purchaseCallback = async (req,res)=>{
+    console.log('微信支付回调：',req.body);
+    try {
+        //修改订单状态
+        var query = req.body.xml;
+        if(query.result_code === 'SUCCESS' || query.result_code[0] === 'SUCCESS' ){
+            console.log('-------------------已经收到微信支付成功回调！-------------.');
+            let tradeId = query.out_trade_no;
+            Record.findOneAndUpdate(
+                {tradeId:tradeId},
+                {
+                    isPay:true
+                },
+                function (err, data) {
+                    if(err)next(err);
+                    // 增加销量
+                    Magazine.findOneAndUpdate({_id:data.magazine},
+                        {$inc:{sold:data.tradeCount}},
+                        function (err, doc) {});
+                }
+            );
+            var resolve = "<xml>" +
+                "<return_code><![CDATA[SUCCESS]]></return_code>" +
+                "<return_msg><![CDATA[OK]]></return_msg>" +
+                "</xml> ";
+            res.header('Content-Type', 'text/xml' );
+            res.end(resolve);
+        }else {
+            res.end(400);
+
+        }
+    }catch (e){
+        console.log('微信支付回调错误',e);
+        res.end(400);
+    }
+};
 

@@ -44,6 +44,7 @@ var magazineSchema = new Schema({
     }],
     sold:Number,//销售数量
     price:{type:Number,default:6},//定价
+    discount:{type:Number,default:1 },// 折扣，在100本后生效,
     rank:{type:Number,default: 0},//排序权重 ，越高越靠前，默认是0 （可用作首页显示）
 
     magazineNum:'',//用于记录图片文件存放路径，方便后期整理

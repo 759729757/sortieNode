@@ -4,7 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const bodyParser = require('body-parser');
-
+const wxchat = require('./utils/wechat')
+require("body-parser-xml")(bodyParser);//微信支付解析xml
 
 //引入mongodb文件
 require('./models/user');
@@ -25,6 +26,20 @@ var Tools = require('./routes/tools');
 
 
 var app = express();
+//解析微信支付
+app.use(bodyParser.xml({
+  limit: "1MB",
+  xmlParseOptions: {
+    normalize: true,
+    normalizeTags: true,
+    explicitArray: false
+  },
+  verify: function(req, res, buf, encoding) {
+    if (buf && buf.length) {
+      req.rawBody = buf.toString(encoding || "utf8");
+    }
+  }
+}));
 
 //接受跨域
 app.all('*', function(req, res, next) {
@@ -72,5 +87,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+wxchat.get_wx_accesstoken();//微信自动更新accesstoken
 
 module.exports = app;
